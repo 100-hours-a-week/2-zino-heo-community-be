@@ -7,10 +7,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const userUpdateRoutes = require('./src/routes/userUpdateRoutes');
 const userPasswordRoutes = require('./src/routes/userPasswordRoutes');
 const boardCreateRoutes = require('./src/routes/boardCreateRoutes');
-const boardUpdateRoutes = require('./src/routes/boardUpdateRoutes');
-const boardDeleteRoutes = require('./src/routes/boardDeleteRoutes');
 const boardReadRoutes = require('./src/routes/boardReadRoutes');
-const boardLikeRoutes = require('./src/routes/boardLikeRoutes');
 
 dotenv.config(); // 환경 변수 로드
 
@@ -27,12 +24,8 @@ app.use('/api/users/register', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userUpdateRoutes);
 app.use('/api/users/password', userPasswordRoutes);
-
 app.use('/api/board/create', boardCreateRoutes);
-app.use('/api/board/update', boardUpdateRoutes);
-app.use('/api/board/delete', boardDeleteRoutes);
-app.use('/api/board', boardReadRoutes); // 모든 게시글 및 특정 게시글 조회
-app.use('/api/board/like', boardLikeRoutes);
+app.use('/api/board', boardReadRoutes);
 
 // 루트 경로에 대한 핸들러 추
 app.get('/', (req, res) => {
