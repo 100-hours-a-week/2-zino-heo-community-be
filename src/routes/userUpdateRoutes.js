@@ -1,62 +1,87 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs'); // 동기 메서드를 사용하는 fs 모듈
+const fsPromises = require('fs').promises; // 비동기 메서드를 사용하는 fs.promises 모듈
 const path = require('path');
 const multer = require('multer'); // multer 모듈 불러오기
 const router = express.Router();
 
 // JSON 파일 경로 설정
 const dataFilePath = path.join(__dirname, '../data/users.json');
-
-// 기존의 /userUploads/ 경로 사용
-const uploadDir = path.join(__dirname, '../../userUploads'); // 이 경로는 실제 경로에 맞게 조정 필요
+const postsFilePath = path.join(__dirname, '../data/posts.json');
 
 // multer 설정 (기존 경로에 저장)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // 업로드할 디렉토리
+    cb(null, 'boardUploads/'); // 파일 저장 경로
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // 파일 이름 설정
+    const uniqueSuffix = Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // 확장자 포함
   },
 });
 
 const upload = multer({ storage }); // 설정된 스토리지 사용
 
-// 기존 사용자 정보 로드 함수
-const loadUsers = () => {
-  if (fs.existsSync(dataFilePath)) {
-    const data = fs.readFileSync(dataFilePath);
-    return JSON.parse(data);
+// 기존 사용자 정보 로드 함수 (비동기)
+const loadUsers = async () => {
+  try {
+    if (fs.existsSync(dataFilePath)) {
+      const data = await fsPromises.readFile(dataFilePath, 'utf8');
+      return JSON.parse(data);
+    }
+    return []; // 파일이 없으면 빈 배열 반환
+  } catch (error) {
+    console.error('Error loading users:', error);
+    return [];
   }
-  return []; // 파일이 없으면 빈 배열 반환
 };
 
-// 사용자 정보 저장 함수
-const saveUsers = (users) => {
-  fs.writeFileSync(dataFilePath, JSON.stringify(users, null, 2)); // JSON 파일로 저장
+// 사용자 정보 저장 함수 (비동기)
+const saveUsers = async (users) => {
+  try {
+    await fsPromises.writeFile(dataFilePath, JSON.stringify(users, null, 2)); // JSON 파일로 저장
+  } catch (error) {
+    console.error('Error saving users:', error);
+  }
+};
+
+// 기존 게시물 정보 로드 함수 (비동기)
+const loadPosts = async () => {
+  try {
+    if (fs.existsSync(postsFilePath)) {
+      const data = await fsPromises.readFile(postsFilePath, 'utf8');
+      return JSON.parse(data);
+    }
+    return []; // 파일이 없으면 빈 배열 반환
+  } catch (error) {
+    console.error('Error loading posts:', error);
+    return [];
+  }
+};
+
+// 게시물 정보 저장 함수 (비동기)
+const savePosts = async (posts) => {
+  try {
+    await fsPromises.writeFile(postsFilePath, JSON.stringify(posts, null, 2)); // JSON 파일로 저장
+  } catch (error) {
+    console.error('Error saving posts:', error);
+  }
 };
 
 // 닉네임 중복 검사 API
-router.get('/check-nickname', (req, res) => {
+router.get('/check-nickname', async (req, res) => {
   const nickname = req.query.nickname;
-  const users = loadUsers();
+  const users = await loadUsers(); // 비동기로 사용자 로드
   const isAvailable = !users.some((user) => user.nickname === nickname);
   res.json({ available: isAvailable });
 });
 
 // 사용자 정보 업데이트 API
-router.put('/update', upload.single('profileImage'), (req, res) => {
-  console.log('Received request:', req.method);
-  console.log('Request headers:', req.headers);
-  console.log('Request body:', req.body);
-  console.log('Uploaded file:', req.file);
-
+router.put('/update', upload.single('profileImage'), async (req, res) => {
   const { email, nickname } = req.body; // 이메일과 닉네임을 클라이언트에서 받음
-  const users = loadUsers();
-  console.log('Loaded users:', users);
+  const users = await loadUsers(); // 비동기로 사용자 로드
 
-  const user = users.find((user) => user.email === email);
-  console.log('Searching for email:', email);
+  const user = users.find((user) => user.email === email); // 현재 수정할 사용자 찾기
 
   if (user) {
     // 사용자 정보 업데이트
@@ -64,7 +89,6 @@ router.put('/update', upload.single('profileImage'), (req, res) => {
 
     // 프로필 이미지 처리
     if (req.file) {
-      // 기존 프로필 이미지 경로
       const oldImagePath = path.join(
         __dirname,
         '../../userUploads',
@@ -80,7 +104,25 @@ router.put('/update', upload.single('profileImage'), (req, res) => {
       user.profileImage = `userUploads/${req.file.filename}`; // 프로필 이미지
     }
 
-    saveUsers(users); // 사용자 정보 저장
+    // 기존 게시물의 작성자 정보 업데이트
+    const posts = await loadPosts(); // 비동기로 모든 게시물 로드
+    let updatedPosts = false; // 업데이트 여부 플래그
+
+    posts.forEach((post) => {
+      if (post.author.email === email) {
+        // 이메일로 작성자 찾기
+        post.author.nickname = user.nickname; // 닉네임 변경
+        post.author.profileImage = user.profileImage; // 프로필 이미지 변경
+        updatedPosts = true; // 업데이트가 이루어졌음을 표시
+      }
+    });
+
+    // 게시물이 업데이트되었으면 저장
+    if (updatedPosts) {
+      await savePosts(posts); // 비동기로 변경된 게시물 목록 저장
+    }
+
+    await saveUsers(users); // 비동기로 사용자 정보 저장
     res.json({ message: '회원 정보가 수정되었습니다.', user });
   } else {
     res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
@@ -88,9 +130,9 @@ router.put('/update', upload.single('profileImage'), (req, res) => {
 });
 
 // 회원 탈퇴 API
-router.delete('/delete', (req, res) => {
+router.delete('/delete', async (req, res) => {
   const { email } = req.body; // 클라이언트에서 이메일 받아오기
-  const users = loadUsers();
+  const users = await loadUsers(); // 비동기로 사용자 로드
 
   // 해당 이메일을 가진 사용자만 필터링
   const updatedUsers = users.filter((user) => user.email !== email);
@@ -100,7 +142,7 @@ router.delete('/delete', (req, res) => {
     return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
   }
 
-  saveUsers(updatedUsers); // 사용자 정보 저장
+  await saveUsers(updatedUsers); // 비동기로 사용자 정보 저장
   res.json({ message: '회원 탈퇴가 완료되었습니다.' });
 });
 

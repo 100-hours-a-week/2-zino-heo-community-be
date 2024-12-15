@@ -8,8 +8,18 @@ const router = express.Router();
 // JSON 파일 경로 설정
 const dataFilePath = path.join(__dirname, '../data/users.json');
 
-// multer 설정
-const upload = multer({ dest: 'userUploads/' });
+// multer 설정 (기존 경로에 저장)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'userUploads/'); // 파일 저장 경로
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // 확장자 포함
+  },
+});
+
+const upload = multer({ storage }); // 설정된 스토리지 사용
 
 // 이메일 형식 검증 함수
 const isValidEmail = (email) => {
