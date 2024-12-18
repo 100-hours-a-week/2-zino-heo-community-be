@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "email": "jinhoya89@gmail.com",
+    "password": "$2b$10$CLpVi7i5eHbOlFhzBw3Y8eVq4VT6CGMowKuzg9GEN1VJ6VCxpyh2i",
+    "nickname": "미진호",
+    "profileImage": "userUploads/318084093.jpeg"
+  },
+  {
+    "email": "jinhoya8@gmail.com",
+    "password": "$2b$10$vMJwJo26aKHL.61EAOKoW.6VaWrSdqvVEp05nvd4mC.wfbZ3.Dm1u",
+    "nickname": "미진호12",
+    "profileImage": "userUploads/128378532.jpeg"
+  },
+  {
+    "email": "jinhoya@gmail.com",
+    "password": "$2b$10$z3W6NPRyBEHJrLFIIbMIPeskLWELY8.bSV8gWA3wlCCe1lY1G.WGi",
+    "nickname": "미진지",
+    "profileImage": "userUploads/772942739.jpeg"
+  }
+]

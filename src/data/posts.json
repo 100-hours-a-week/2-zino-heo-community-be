@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": 1734517595341,
+    "title": "asda",
+    "content": "sadad",
+    "image": "boardUploads/389298487.jpeg",
+    "createdAt": "2024-12-18T10:26:35.341Z",
+    "author": {
+      "email": "jinhoya@gmail.com",
+      "nickname": "미진지",
+      "profileImage": "userUploads/772942739.jpeg"
+    },
+    "likes": [],
+    "views": 1,
+    "comments": []
+  }
+]
