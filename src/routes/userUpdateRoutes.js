@@ -12,7 +12,7 @@ const postsFilePath = path.join(__dirname, '../data/posts.json');
 // multer 설정 (기존 경로에 저장)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'boardUploads/'); // 파일 저장 경로
+    cb(null, 'userUploads/'); // 파일 저장 경로
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Math.round(Math.random() * 1e9);
@@ -115,6 +115,17 @@ router.put('/update', upload.single('profileImage'), async (req, res) => {
         post.author.profileImage = user.profileImage; // 프로필 이미지 변경
         updatedPosts = true; // 업데이트가 이루어졌음을 표시
       }
+
+      // 댓글 작성자 정보 업데이트
+      if (Array.isArray(post.comments)) {
+        // comments가 배열인지 확인
+        post.comments.forEach((comment) => {
+          if (comment.author.email === email) {
+            comment.author.nickname = user.nickname; // 닉네임 변경
+            comment.author.profileImage = user.profileImage; // 프로필 이미지 변경
+          }
+        });
+      }
     });
 
     // 게시물이 업데이트되었으면 저장
@@ -133,6 +144,7 @@ router.put('/update', upload.single('profileImage'), async (req, res) => {
 router.delete('/delete', async (req, res) => {
   const { email } = req.body; // 클라이언트에서 이메일 받아오기
   const users = await loadUsers(); // 비동기로 사용자 로드
+  const posts = await loadPosts(); // 비동기로 게시물 로드
 
   // 해당 이메일을 가진 사용자만 필터링
   const updatedUsers = users.filter((user) => user.email !== email);
@@ -142,7 +154,19 @@ router.delete('/delete', async (req, res) => {
     return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
   }
 
+  // 탈퇴하는 사용자가 작성한 게시물 삭제
+  const updatedPosts = posts.filter((post) => post.author.email !== email);
+
+  // 게시물에서 댓글도 삭제
+  updatedPosts.forEach((post) => {
+    post.comments = post.comments.filter(
+      (comment) => comment.author.email !== email
+    );
+  });
+
   await saveUsers(updatedUsers); // 비동기로 사용자 정보 저장
+  await savePosts(updatedPosts); // 비동기로 게시물 정보 저장
+
   res.json({ message: '회원 탈퇴가 완료되었습니다.' });
 });
 
