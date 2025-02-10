@@ -4,9 +4,7 @@ const fs = require('fs'); // 파일 시스템 모듈 임포트
 const path = require('path'); // 경로 모듈 임포트
 const multer = require('multer'); // multer 모듈 임포트
 const router = express.Router();
-
-// JSON 파일 경로 설정
-const dataFilePath = path.join(__dirname, '../data/users.json');
+const { createUser, getUserByEmail, getUserByNickname } = require('../../db'); // DB 관련 함수 가져오기
 
 // multer 설정 (기존 경로에 저장)
 const storage = multer.diskStorage({
@@ -25,20 +23,6 @@ const upload = multer({ storage }); // 설정된 스토리지 사용
 const isValidEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // 이메일 정규 표현식
   return re.test(String(email).toLowerCase());
-};
-
-// 기존 사용자 정보 로드 함수
-const loadUsers = () => {
-  if (fs.existsSync(dataFilePath)) {
-    const data = fs.readFileSync(dataFilePath);
-    return JSON.parse(data);
-  }
-  return []; // 파일이 없으면 빈 배열 반환
-};
-
-// 사용자 정보 저장 함수
-const saveUsers = (users) => {
-  fs.writeFileSync(dataFilePath, JSON.stringify(users, null, 2)); // JSON 파일로 저장
 };
 
 // 회원가입 엔드포인트
@@ -63,15 +47,13 @@ router.post('/', upload.single('profileImage'), async (req, res) => {
       return res.status(400).json({ error: '비밀번호가 일치하지 않습니다.' });
     }
 
-    const users = loadUsers(); // 기존 사용자 정보 로드
-    const existingUserByEmail = users.find((user) => user.email === email);
+    // DB에서 사용자 중복 검사
+    const existingUserByEmail = await getUserByEmail(email);
     if (existingUserByEmail) {
       return res.status(400).json({ error: '이미 사용 중인 이메일입니다.' });
     }
 
-    const existingUserByNickname = users.find(
-      (user) => user.nickname === nickname
-    );
+    const existingUserByNickname = await getUserByNickname(nickname);
     if (existingUserByNickname) {
       return res.status(400).json({ error: '이미 사용 중인 닉네임입니다.' });
     }
@@ -81,11 +63,9 @@ router.post('/', upload.single('profileImage'), async (req, res) => {
 
     // 사용자 정보 저장
     const newUser = { email, password: hashedPassword, nickname, profileImage };
-    users.push(newUser); // 더미 데이터 배열에 저장
-    saveUsers(users); // 사용자 정보를 JSON 파일에 저장
+    await createUser(newUser); // DB에 사용자 정보 저장
 
     console.log('Received data:', req.body); // 수신된 데이터 로그 출력
-    console.log('Current users:', users); // 현재 저장된 사용자 목록 로그 출력
 
     // 성공 응답
     res
@@ -97,6 +77,5 @@ router.post('/', upload.single('profileImage'), async (req, res) => {
   }
 });
 
-// 다른 사용자 관련 API 엔드포인트 추가 가능
-
+// 모듈 내보내기
 module.exports = router;
