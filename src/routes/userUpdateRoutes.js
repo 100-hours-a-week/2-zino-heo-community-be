@@ -12,7 +12,7 @@ const postsFilePath = path.join(__dirname, '../data/posts.json');
 // multer 설정 (기존 경로에 저장)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'boardUploads/'); // 파일 저장 경로
+    cb(null, 'userUploads/'); // 파일 저장 경로
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Math.round(Math.random() * 1e9);
