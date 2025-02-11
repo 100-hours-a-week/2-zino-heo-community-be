@@ -10,16 +10,9 @@ RUN npm install
 # db.js와 server.js를 복사
 COPY ./db.js ./
 COPY ./server.js ./
-
-# userUploads와 boardUploads 디렉토리 생성 (존재하지 않을 경우)
-RUN mkdir -p /usr/src/app/userUploads /usr/src/app/boardUploads
-
-# userUploads와 boardUploads 폴더에 파일 복사
-COPY userUploads/ /usr/src/app/userUploads/
-COPY boardUploads/ /usr/src/app/boardUploads/
-
-# src 디렉토리 복사
 COPY ./src ./src
+COPY ./boardUploads ./boardUploads
+COPY ./userUploads ./userUploads
 
 EXPOSE 3000
 
