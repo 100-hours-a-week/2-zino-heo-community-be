@@ -11,8 +11,6 @@ RUN npm install
 COPY ./db.js ./
 COPY ./server.js ./
 COPY ./src ./src
-COPY ./boardUploads ./boardUploads
-COPY ./userUploads ./userUploads
 
 EXPOSE 3000
 

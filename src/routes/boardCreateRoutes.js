@@ -8,7 +8,21 @@ const { createPost } = require('../../db'); // DB에 게시글 저장 함수 가
 // multer 설정 (파일 저장 설정)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'boardUploads/'); // 파일 저장 경로
+    const uploadDir = 'boardUploads/';
+
+    // 디렉토리가 존재하지 않으면 생성
+    fs.access(uploadDir, (error) => {
+      if (error) {
+        fs.mkdir(uploadDir, { recursive: true }, (err) => {
+          if (err) {
+            return cb(err); // 디렉토리 생성 중 오류 발생
+          }
+          cb(null, uploadDir); // 디렉토리 생성 후 경로 반환
+        });
+      } else {
+        cb(null, uploadDir); // 디렉토리가 이미 존재하면 경로 반환
+      }
+    });
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Math.round(Math.random() * 1e9);

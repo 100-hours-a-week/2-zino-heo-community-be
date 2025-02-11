@@ -9,7 +9,21 @@ const { createUser, getUserByEmail, getUserByNickname } = require('../../db'); /
 // multer 설정 (기존 경로에 저장)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'userUploads/'); // 파일 저장 경로
+    const uploadDir = 'userUploads/';
+
+    // 디렉토리가 존재하지 않으면 생성
+    fs.access(uploadDir, (error) => {
+      if (error) {
+        fs.mkdir(uploadDir, { recursive: true }, (err) => {
+          if (err) {
+            return cb(err); // 디렉토리 생성 중 오류 발생
+          }
+          cb(null, uploadDir); // 디렉토리 생성 후 경로 반환
+        });
+      } else {
+        cb(null, uploadDir); // 디렉토리가 이미 존재하면 경로 반환
+      }
+    });
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Math.round(Math.random() * 1e9);
