@@ -10,10 +10,10 @@ jobs:
     steps:
       - name: Setting .env
         run: |
-          echo "DB_HOST=$DB_HOST" >> .env
-          echo "DB_USER=$DB_USER" >> .env
-          echo "DB_PASSWORD=$DB_PASSWORD" >> .env
-          echo "DB_NAME=$DB_NAME" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
           cat .env
 
       - name: Check out code
