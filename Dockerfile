@@ -9,8 +9,8 @@ RUN npm install
 
 COPY ./db.js ./
 COPY ./server.js ./
-COPY ./userUploads ./userUploads
-COPY ./boardUploads ./boardUploads
+COPY userUploads /userUploads
+COPY boardUploads /boardUploads
 COPY ./src ./src
 
 EXPOSE 3000
