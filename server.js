@@ -14,7 +14,7 @@ const sessionRoutes = require('./src/routes/sessionRoutes');
 dotenv.config(); // 환경 변수 로드
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 // CORS 설정
 const corsOptions = {
